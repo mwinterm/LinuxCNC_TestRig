@@ -6,11 +6,13 @@
 loadrt [KINS]KINEMATICS
 loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
 loadrt hostmot2
-loadrt hm2_eth board_ip="10.10.10.10" config=" num_encoders=1 num_pwmgens=0 num_stepgens=5 sserial_port_0=00xxxx" 
+loadrt hm2_eth board_ip="10.10.10.10" config=" num_encoders=1 num_pwmgens=0 num_stepgens=5 sserial_port_0=10xxxx" 
 setp    hm2_7i76e.0.watchdog.timeout_ns 5000000
 loadrt pid names=pid.x,pid.y,pid.z,pid.s
-loadrt scale names=scale.gear
+loadrt scale names=scale.gear,spindle-scale,feed-scale
 loadrt mux16 names=ratio_select
+loadrt and2 count=2
+loadrt conv_float_s32 count=2
 
 addf hm2_7i76e.0.read          servo-thread
 addf motion-command-handler   servo-thread
@@ -24,6 +26,13 @@ addf scale.gear               servo-thread
 addf hm2_7i76e.0.write         servo-thread
 setp hm2_7i76e.0.dpll.01.timer-us -50
 setp hm2_7i76e.0.stepgen.timer-number 1
+addf and2.0                   servo-thread
+addf and2.1                   servo-thread
+addf spindle-scale            servo-thread
+addf conv-float-s32.0         servo-thread
+addf feed-scale               servo-thread
+addf conv-float-s32.1         servo-thread
+
 
 # external output signals
 
@@ -47,7 +56,39 @@ setp hm2_7i76e.0.7i76.0.0.output-07-invert true
 
 
 # --- CYCLE-START ---
-net cycle-start     <=  hm2_7i76e.0.7i76.0.0.input-04
+net cycle-start-button     <=  hm2_7i76e.0.7i76.0.0.input-04
+net cycle-start-button and2.0.in0
+net prg-idle and2.0.in1 <= halui.program.is-idle
+net cycle-start and2.0.out => halui.program.run
+
+# --- CYCLE-PAUSE ---
+net cycle-pause-button     <=  hm2_7i76e.0.7i76.0.0.input-05
+net cycle-pause-button     =>  halui.program.pause
+
+# --- CYCLE-RESUME ---
+net cycle-start-button and2.1.in0
+net prg-paused and2.1.in1 <= halui.program.is-paused
+net cycle-resume and2.1.out => halui.program.resume
+
+# --- SINDLE-OVERRIDE ---
+setp halui.spindle.0.override.direct-value false
+setp halui.spindle.0.override.count-enable true
+setp halui.spindle.0.override.scale 0.01
+setp spindle-scale.gain 20.5
+setp spindle-scale.offset 0
+net spindle-pot hm2_7i76e.0.7i76.0.0.analogin1 => spindle-scale.in
+net spindle-scale-out spindle-scale.out => conv-float-s32.0.in 
+net spindle-override conv-float-s32.0.out => halui.spindle.0.override.counts
+
+# --- FEED-OVERRIDE ---
+setp halui.feed-override.direct-value false
+setp halui.feed-override.count-enable true
+setp halui.feed-override.scale 0.01
+setp feed-scale.gain 41
+setp feed-scale.offset -2
+net feed-pot hm2_7i76e.0.7i76.0.0.analogin0 => feed-scale.in
+net feed-scale-out feed-scale.out => conv-float-s32.1.in 
+net feed-override conv-float-s32.1.out => halui.feed-override.counts
 
 #*******************
 #  AXIS X JOINT 0

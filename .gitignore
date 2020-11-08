@@ -1,2 +1,4 @@
 *.bak
 *.backups/*
+*.halshow
+pinout.txt

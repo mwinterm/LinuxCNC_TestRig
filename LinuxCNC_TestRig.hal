@@ -13,6 +13,9 @@ loadrt scale names=scale.gear,spindle-scale,feed-scale,rapid-scale
 loadrt mux16 names=ratio_select
 loadrt and2 count=2
 loadrt conv_float_s32 count=3
+loadrt toggle count=1
+loadrt toggle2nist count=1
+loadrt timedelay count=1
 
 addf hm2_7i76e.0.read          servo-thread
 addf motion-command-handler   servo-thread
@@ -34,8 +37,11 @@ addf feed-scale               servo-thread
 addf conv-float-s32.1         servo-thread
 addf rapid-scale              servo-thread
 addf conv-float-s32.2         servo-thread
+addf toggle.0                 servo-thread
+addf toggle2nist.0            servo-thread
+addf timedelay.0              servo-thread
 
-
+show pin
 # external output signals
 
 
@@ -54,6 +60,16 @@ setp hm2_7i76e.0.7i76.0.0.output-06-invert true
 net z-enable  =>     hm2_7i76e.0.7i76.0.0.output-07
 setp hm2_7i76e.0.7i76.0.0.output-07-invert true
 
+# --- MOTION-ENABLE ---
+net motion-button-led toggle.0.out => hm2_7i76e.0.7i76.0.0.output-03
+
+# --- CYCLE-LED ---
+net cycle-led halui.program.is-running => hm2_7i76e.0.7i76.0.0.output-00
+
+# --- CYCLE-PAUSED-LED ---
+net prg-paused halui.program.is-paused => hm2_7i76e.0.7i76.0.0.output-01
+
+
 # external input signals
 
 
@@ -71,6 +87,27 @@ net cycle-pause-button     =>  halui.program.pause
 net cycle-start-button and2.1.in0
 net prg-paused and2.1.in1 <= halui.program.is-paused
 net cycle-resume and2.1.out => halui.program.resume
+
+# --- SINGLE-STEP ---
+net single-step-button hm2_7i76e.0.7i76.0.0.input-09
+net single-step-button => halui.program.step
+
+# --- MOTION-BUTTON ---
+net motion-button hm2_7i76e.0.7i76.0.0.input-10 => toggle.0.in
+#net z-enable toggle.0.out => hm2_7i76e.0.7i76.0.0.output-03
+
+# --- SPINDLE-BUTTON ---
+#net spindle-button toggle2nist.0.in <= hm2_7i76e.0.7i76.0.0.input-08
+#net spindle-enable => toggle2nist.0.is-on
+#net spindle-manual-start toggle2nist.0.on
+#net spindle-manual-stop toggle2nist.0.off
+
+# --- SPINDLE-BUTTON ---
+net spindle-button toggle2nist.0.in <= hm2_7i76e.0.7i76.0.0.input-08
+net spindle-enable => timedelay.0.in
+net spindle-enable-delayed toggle2nist.0.is-on <= timedelay.0.out
+net spindle-manual-start toggle2nist.0.on
+net spindle-manual-stop toggle2nist.0.off
 
 # --- SINDLE-OVERRIDE ---
 setp halui.spindle.0.override.direct-value true
@@ -334,6 +371,7 @@ net jog-selected-neg      halui.axis.selected.minus
 net spindle-manual-cw     halui.spindle.0.forward
 net spindle-manual-ccw    halui.spindle.0.reverse
 net spindle-manual-stop   halui.spindle.0.stop
+net spindle-manual-start  halui.spindle.0.start
 net machine-is-on         halui.machine.is-on
 net jog-speed             halui.axis.jog-speed
 net MDI-mode              halui.mode.is-mdi
@@ -341,7 +379,9 @@ net MDI-mode              halui.mode.is-mdi
 #  ---coolant signals---
 
 net coolant-mist      <=  iocontrol.0.coolant-mist
-net coolant-flood     <=  iocontrol.0.coolant-flood
+net coolant-flood   hm2_7i76e.0.7i76.0.0.output-02  <=  iocontrol.0.coolant-flood
+
+
 
 #  ---probe signal---
 

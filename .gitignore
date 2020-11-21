@@ -1,4 +1,5 @@
 *.bak
 *.backups/*
 *.halshow
+*.pyc
 pinout.txt

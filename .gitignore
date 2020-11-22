@@ -2,4 +2,5 @@
 *.backups/*
 *.halshow
 *.pyc
+*.halscope
 pinout.txt

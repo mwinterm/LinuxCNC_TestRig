@@ -1,0 +1,53 @@
+#!/bin/bash
+# file to set gears
+p_state_float=$1
+p_state_int=${p_state_float/.*}
+
+echo Hello World
+echo $p_state_int
+echo $1
+
+if [ $p_state_int -eq 0 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 FALSE
+elif [ $p_state_int -eq 1 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 TRUE
+elif [ $p_state_int -eq 10 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 FALSE
+elif [ $p_state_int -eq 11 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 TRUE
+elif [ $p_state_int -eq 100 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 FALSE
+elif [ $p_state_int -eq 101 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 FALSE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 TRUE
+elif [ $p_state_int -eq 110 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 FALSE
+elif [ $p_state_int -eq 111 ]
+then
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-08 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-09 TRUE
+  halcmd setp hm2_7i76e.0.7i76.0.0.output-10 TRUE
+else
+  echo "ERROR: unkown gear code"
+fi
+exit 0
